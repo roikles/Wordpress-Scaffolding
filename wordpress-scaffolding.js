@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 // use npm link to test this plugin while in dev
-var q = require('wp-cli');
 var fs = require('fs');
 var wp = require('wp-cli');
 var http = require('http');
 var chalk = require('chalk');
 var prompt = require('cli-prompt');
 var commander = require('commander');
+var unzip = require('decompress-zip');
 
 
 // Set up basic command line args
@@ -128,7 +128,30 @@ function createDirectories(customDirStructure){
 //createDirectories(true);
 
 
-// Install wordPress
+// Unzippy in a jiffy
+function extractWordpress(wp_zip){
+    
+    // create a Wordpress directory (ties in to the custom dir structure stuff)
+    fs.mkdirSync('./wordpress');
+
+    var unzipper = new unzip(wp_zip);
+
+    unzipper.on('error', function (err) {
+        callback(error.message);
+    });
+
+    unzipper.on('extract', function (log) {
+        console.log(chalk.green('Finished extracting Wordpress!'));
+    });
+
+    unzipper.extract({
+        path: './',
+    });
+
+}
+
+
+// Download wordPress
 
 function downloadWordpress(){
 
@@ -136,21 +159,24 @@ function downloadWordpress(){
 
     getLatestWordpress( function ( err,result ) {
         
-        console.log(chalk.yellow(result.no_content_download)); 
+        console.log( chalk.yellow( 'Downloading ' + result.no_content_download ) ); 
 
-        var file = fs.createWriteStream('wordpress.zip');
+        var zip_name = 'wordpress.zip';
+
+        var file = fs.createWriteStream(zip_name);
         
         var request = http.get(result.no_content_download, function(response) {
             
             response.pipe(file);
             file.on('close', function() {
                 file.close();  // close() is async, call cb after close completes.
-                console.log( chalk.green( callback( null,'Wordpress Downloaded successfully!' ) ) );
+                console.log( chalk.green( callback( null,'Wordpress Downloaded successfully!' ) ) ); 
+                // ^Remember to include console.logs() because callback will just output any old data and doesnt parse it.
+                extractWordpress(zip_name);
             });
         
         }).on('error', function (error) {
         
-            //console.error(chalk.red('Error with request:', error.message));
             callback('Error with download of Wordpress: ', error.message);
         
         });
@@ -159,6 +185,7 @@ function downloadWordpress(){
 }
 
 downloadWordpress();
+
 
 /*prompt.multi([
     {
