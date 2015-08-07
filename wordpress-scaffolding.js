@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 // use npm link to test this plugin while in dev
+var db = require('node-mysql');
 var fs = require('fs');
 var wp = require('wp-cli');
 var http = require('http');
@@ -194,7 +195,7 @@ function downloadWordpress(){
 }
 
 function createDatabase(){
-    
+
 }
 
 function installWordpress(){
