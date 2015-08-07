@@ -36,14 +36,29 @@ var wp_db_host      = 'localhost';
 var wp_db_user      = 'user';
 var wp_db_pass      = 'pass';
 
+
+/**
+ * Handle all errors through a single 
+ * callback function
+ */
+
+function callback (error, data) {
+    if(error) {
+        console.log(chalk.red(error));
+        return;
+    }
+    return data;
+}
+
+
 /**
  * getWpVersionInfo - gets the lates WordPress version and download links
  * @param  {Function} cb Callback function that is neccessary for data and errors
  * @return {Object}   Thisreturns selected data extracted from the api/json request
  */
-function getWpVersionInfo(cb) {
+function getLatestWordpress (callback){
     // Pass the API details to the http.get method
-    return http.get({
+    http.get({
         host: 'api.wordpress.org',
         path: '/core/version-check/1.7/'
     }, function(response) {
@@ -53,40 +68,39 @@ function getWpVersionInfo(cb) {
         var body = '';
         
         // Collect all the Async data into the body var
-        response.on('data', function (chunk){
+        response.on('data', function (chunk) {
             body += chunk;       
         });
         // On async completion parse the JSON or handle any parsing errors that arise
-        response.on('end', function(){
+        response.on('end', function () {
             try {
                 jsonData = JSON.parse(body);
-            } catch (err){
-                console.error( chalk.red('Unable to parse WordPress Version from JSON.'));
-                return cb(err);
+            } catch (error){
+                //console.error( chalk.red('Unable to parse WordPress Version from JSON. ' + error));
+                callback( 'Unable to parse WordPress Version from JSON. ' + error );
             }
 
-            // Callback for handling errors and results
-            cb(null, {
-                wp_version: "Latest Version: " + jsonData.offers[0].current,
-                wp_full_download: jsonData.offers[0].packages.full,
-                wp_no_content_download: jsonData.offers[0].packages.no_content 
+            callback(null, {
+                version:             "Latest Version: " + jsonData.offers[0].current,
+                full_download:       jsonData.offers[0].packages.full,
+                no_content_download: jsonData.offers[0].packages.no_content 
             });
-            
+
         });
 
     // Handle any errors with the request
-    }).on('error', function(err) {
-        console.error(chalk.red('Error with request:', err.message));
-        cb(err);
+    }).on('error', function (error) {
+        //console.error(chalk.red('Error with request:', error.message));
+        callback('Error with request: ', error.message);
     });
 
 }
 
-// Run this function for debugging purposes
-/*getWpVersionInfo(function(err,result){
-   console.log(chalk.green(result.wp_version));
-   console.log(chalk.green(result.wp_full_download));
-   console.log(chalk.green(result.wp_no_content_download)); 
+
+/*getLatestWordpress(function (err,result){
+   console.log(chalk.green(result.version));
+   console.log(chalk.green(result.full_download));
+   console.log(chalk.green(result.no_content_download)); 
 });*/
 
 
@@ -119,11 +133,28 @@ function createDirectories(customDirStructure){
 
 function installWordpress(){
 
-    getWpVersionInfo(function(err,result){  
-        var wp_download_location = result.wp_no_content_download;
-    });
+    console.log(chalk.green(result.no_content_download)); 
 
-    console.log(wp_download_location);
+    getLatestWordpress( function ( err,result ) {
+        
+        console.log(chalk.green(result.no_content_download)); 
+
+        var file = fs.createWriteStream('wordpress.zip');
+        
+        var request = http.get(result.no_content_download, function(response) {
+            
+            response.pipe(file);
+            file.on('finish', function() {
+                file.close(callback);  // close() is async, call cb after close completes.
+            });
+        
+        }).on('error', function (error) {
+        
+            //console.error(chalk.red('Error with request:', error.message));
+            callback('Error with download of Wordpress: ', error.message);
+        
+        });
+    });
 
 }
 
