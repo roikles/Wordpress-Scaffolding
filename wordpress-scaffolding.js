@@ -107,6 +107,8 @@ function createDirectories(customDirStructure){
 
     if(customDirStructure){
         
+        fs.mkdirSync('./wordpress');
+        console.log(chalk.green('Directory created /wordpress'));
         fs.mkdirSync('./wp-content');
         console.log(chalk.green('Directory created /wp-content'));
         
@@ -132,7 +134,7 @@ function createDirectories(customDirStructure){
 function extractWordpress(wp_zip){
     
     // create a Wordpress directory (ties in to the custom dir structure stuff)
-    fs.mkdirSync('./wordpress');
+    //fs.mkdirSync('./wordpress');
 
     var unzipper = new unzip(wp_zip);
 
@@ -140,8 +142,15 @@ function extractWordpress(wp_zip){
         callback(error.message);
     });
 
+    unzipper.on('progress', function (fileIndex, fileCount) {
+        console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
+    });
+
     unzipper.on('extract', function (log) {
         console.log(chalk.green('Finished extracting Wordpress!'));
+        fs.unlink(wp_zip, function (err) {
+            callback(null, console.log( chalk.yellow( 'removed ' + wp_zip) ) );
+        });
     });
 
     unzipper.extract({
@@ -184,8 +193,14 @@ function downloadWordpress(){
 
 }
 
-downloadWordpress();
 
+
+function installWordpress(){
+    createDirectories(true);
+    downloadWordpress();
+}
+
+installWordpress();
 
 /*prompt.multi([
     {
