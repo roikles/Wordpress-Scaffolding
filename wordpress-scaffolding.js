@@ -193,7 +193,9 @@ function downloadWordpress(){
 
 }
 
-
+function createDatabase(){
+    
+}
 
 function installWordpress(){
     createDirectories(true);

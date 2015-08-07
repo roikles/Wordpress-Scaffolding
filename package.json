@@ -16,6 +16,7 @@
     "cli-prompt": "^0.4.2",
     "commander": "^2.8.1",
     "decompress-zip": "^0.2.0",
+    "node-mysql": "^0.4.2",
     "q": "^1.4.1",
     "wp-cli": "0.0.5"
   }
