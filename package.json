@@ -1,0 +1,20 @@
+{
+  "name": "wp-cli-init",
+  "version": "1.0.0",
+  "description": "cli module to quickly set up a new Wordpress instance, install the theme and some initial plugins",
+  "main": "wordpress-scaffolding.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "wordpress-scaffolding": "wordpress-scaffolding.js"
+  },
+  "author": "Roikles <http://github.com/roikles> (http://github.com/roikles)",
+  "license": "MIT",
+  "devDependencies": {
+    "chalk": "^1.1.0",
+    "cli-prompt": "^0.4.2",
+    "commander": "^2.8.1",
+    "wp-cli": "0.0.5"
+  }
+}

@@ -1,0 +1,51 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'link' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.32
+4 verbose linkPkg /Applications/MAMP/htdocs/scaffolding2015
+5 verbose link build target /usr/local/lib/node_modules/wp-cli-init
+6 verbose install where,what [ '/Applications/MAMP/htdocs/scaffolding2015', [] ]
+7 verbose readDependencies using package.json deps
+8 verbose install where, deps [ '/Applications/MAMP/htdocs/scaffolding2015',
+8 verbose install   [ 'chalk', 'cli-prompt', 'commander', 'wp-cli' ] ]
+9 info preinstall wp-cli-init@1.0.0
+10 verbose readDependencies using package.json deps
+11 verbose already installed skipping chalk@^1.1.0 /Applications/MAMP/htdocs/scaffolding2015
+12 verbose already installed skipping cli-prompt@^0.4.2 /Applications/MAMP/htdocs/scaffolding2015
+13 verbose already installed skipping commander@^2.8.1 /Applications/MAMP/htdocs/scaffolding2015
+14 verbose already installed skipping wp-cli@0.0.5 /Applications/MAMP/htdocs/scaffolding2015
+15 silly resolved []
+16 info build /Applications/MAMP/htdocs/scaffolding2015
+17 verbose linkStuff [ false, false, false, '/Applications/MAMP/htdocs' ]
+18 info linkStuff wp-cli-init@1.0.0
+19 verbose linkBins wp-cli-init@1.0.0
+20 verbose linkMans wp-cli-init@1.0.0
+21 verbose rebuildBundles wp-cli-init@1.0.0
+22 verbose rebuildBundles [ 'chalk', 'cli-prompt', 'commander', 'wp-cli' ]
+23 info install wp-cli-init@1.0.0
+24 info postinstall wp-cli-init@1.0.0
+25 info prepublish wp-cli-init@1.0.0
+26 info build /usr/local/lib/node_modules/wp-cli-init
+27 verbose linkStuff [ true,
+27 verbose linkStuff   '/usr/local/lib/node_modules',
+27 verbose linkStuff   true,
+27 verbose linkStuff   '/usr/local/lib/node_modules' ]
+28 info linkStuff wp-cli-init@1.0.0
+29 verbose linkBins wp-cli-init@1.0.0
+30 verbose link bins [ { 'wordpress-scaffolding': 'wp-cli-scaffolding.js' },
+30 verbose link bins   '/usr/local/bin',
+30 verbose link bins   true ]
+31 verbose linkMans wp-cli-init@1.0.0
+32 error Error: ENOENT, chmod '/usr/local/lib/node_modules/wp-cli-init/wp-cli-scaffolding.js'
+33 error If you need help, you may report this *entire* log,
+33 error including the npm and node versions, at:
+33 error     <http://github.com/npm/npm/issues>
+34 error System Darwin 14.4.0
+35 error command "node" "/usr/local/bin/npm" "link"
+36 error cwd /Applications/MAMP/htdocs/scaffolding2015
+37 error node -v v0.10.32
+38 error npm -v 1.4.28
+39 error path /usr/local/lib/node_modules/wp-cli-init/wp-cli-scaffolding.js
+40 error code ENOENT
+41 error errno 34
+42 verbose exit [ 34, true ]
