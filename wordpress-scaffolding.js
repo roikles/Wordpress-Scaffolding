@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 // use npm link to test this plugin while in dev
-
-var http = require('http');
+var q = require('wp-cli');
 var fs = require('fs');
-var commander = require('commander');
+var wp = require('wp-cli');
+var http = require('http');
 var chalk = require('chalk');
 var prompt = require('cli-prompt');
-var wp = require('wp-cli');
+var commander = require('commander');
 
-// Set up basic command line articles
 
+// Set up basic command line args
 commander
     .version('1.0.0')
     .option('-i, --install', 'relative path to the stylesheet to process')
@@ -76,7 +76,6 @@ function getLatestWordpress (callback){
             try {
                 jsonData = JSON.parse(body);
             } catch (error){
-                //console.error( chalk.red('Unable to parse WordPress Version from JSON. ' + error));
                 callback( 'Unable to parse WordPress Version from JSON. ' + error );
             }
 
@@ -131,21 +130,22 @@ function createDirectories(customDirStructure){
 
 // Install wordPress
 
-function installWordpress(){
+function downloadWordpress(){
 
-    console.log(chalk.green(result.no_content_download)); 
+    //console.log(chalk.green(result.no_content_download)); 
 
     getLatestWordpress( function ( err,result ) {
         
-        console.log(chalk.green(result.no_content_download)); 
+        console.log(chalk.yellow(result.no_content_download)); 
 
         var file = fs.createWriteStream('wordpress.zip');
         
         var request = http.get(result.no_content_download, function(response) {
             
             response.pipe(file);
-            file.on('finish', function() {
-                file.close(callback);  // close() is async, call cb after close completes.
+            file.on('close', function() {
+                file.close();  // close() is async, call cb after close completes.
+                console.log( chalk.green( callback( null,'Wordpress Downloaded successfully!' ) ) );
             });
         
         }).on('error', function (error) {
@@ -158,7 +158,7 @@ function installWordpress(){
 
 }
 
-installWordpress();
+downloadWordpress();
 
 /*prompt.multi([
     {
