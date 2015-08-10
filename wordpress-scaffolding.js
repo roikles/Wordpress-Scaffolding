@@ -43,9 +43,6 @@ var connection = mysql.createConnection({
     password : wp_db_pass
 });
 
-/*process.on('uncaughtException', function (error) {
-   console.log(error.stack);
-});*/
 
 /**
  * Handle all errors through a single 
@@ -105,34 +102,37 @@ function getLatestWordpress (callback){
 
 }
 
+// create a directory synchronously
+function createDirectorySync(dir){
+        
+    try {
 
-/*getLatestWordpress(function (err,result){
-   console.log(chalk.green(result.version));
-   console.log(chalk.green(result.full_download));
-   console.log(chalk.green(result.no_content_download)); 
-});*/
+        fs.mkdirSync(dir);
+
+    } catch(error) {
+        // If the error is not a file exists error
+        if ( error.code != 'EEXIST' ){
+            callback( 'Unable to create dir: ' + error );
+        }
+        // If file exists
+        callback('Directory already exists: ' + dir);
+        return;
+    }
+    
+    callback( null, console.log( chalk.green( 'Directory created: ' + dir ) ) );
+
+}
 
 
-function createDirectories(customDirStructure){
+function createWordpressDirectories(customDirStructure){
+
+    createDirectorySync('./wp-content');
+    createDirectorySync('./wp-content/themes');
+    createDirectorySync('./wp-content/plugins');
+    fs.writeFileSync('./wp-content/index.php', '<?php\r\n// Silence is golden.');
 
     if(customDirStructure){
-        
-        fs.mkdirSync('./wordpress');
-        console.log(chalk.green('Directory created /wordpress'));
-        fs.mkdirSync('./wp-content');
-        console.log(chalk.green('Directory created /wp-content'));
-        
-        fs.mkdirSync('./wp-content/themes');
-        console.log(chalk.green('Directory created /wp-content/themes'));
-        
-        fs.mkdirSync('./wp-content/plugins');
-        console.log(chalk.green('Directory created /wp-content/plugins'));
-        
-
-        fs.writeFileSync('./wp-content/index.php', '<?php\r\n// Silence is golden.');
-        
-    } else {
-        // default install Jazz.
+        createDirectorySync('./wordpress');
     }
 
 }
@@ -151,7 +151,7 @@ function extractWordpress(wp_zip){
     });
 
     unzipper.on('progress', function (fileIndex, fileCount) {
-        console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
+        // console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
     });
 
     unzipper.on('extract', function (log) {
@@ -262,9 +262,9 @@ function createDatabase(){
 
 function installWordpress(){
     
-    createDirectories(true);
+    createWordpressDirectories(true);
     
-    downloadWordpress();
+    /*downloadWordpress();
     
     connection.connect(function(error) {
         if(error){
@@ -275,7 +275,7 @@ function installWordpress(){
         createDatabase();
 
         //callback( null, console.log( chalk.green( 'DB connection establised.' ) ) );
-    });
+    });*/
     
     
 
