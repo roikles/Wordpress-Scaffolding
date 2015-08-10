@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 // use npm link to test this plugin while in dev
-var db = require('node-mysql');
 var fs = require('fs');
 var wp = require('wp-cli');
 var http = require('http');
 var chalk = require('chalk');
+var mysql = require('mysql');
 var prompt = require('cli-prompt');
 var commander = require('commander');
 var unzip = require('decompress-zip');
@@ -32,11 +32,20 @@ var wp_title        = 'Project Title';
 var wp_email        = 'me@example.com';
 
 // Database details
-var wp_db_name      = 'db-name';
+var wp_db_name      = 'demowpdb';
 var wp_db_host      = 'localhost';
-var wp_db_user      = 'user';
-var wp_db_pass      = 'pass';
+var wp_db_user      = 'root';
+var wp_db_pass      = 'root';
 
+var connection = mysql.createConnection({
+    host     : wp_db_host,
+    user     : wp_db_user,
+    password : wp_db_pass
+});
+
+/*process.on('uncaughtException', function (error) {
+   console.log(error.stack);
+});*/
 
 /**
  * Handle all errors through a single 
@@ -128,8 +137,6 @@ function createDirectories(customDirStructure){
 
 }
 
-//createDirectories(true);
-
 
 // Unzippy in a jiffy
 function extractWordpress(wp_zip){
@@ -180,7 +187,9 @@ function downloadWordpress(){
             response.pipe(file);
             file.on('close', function() {
                 file.close();  // close() is async, call cb after close completes.
-                console.log( chalk.green( callback( null,'Wordpress Downloaded successfully!' ) ) ); 
+
+                callback(null, console.log( chalk.green( 'Wordpress Downloaded successfully!') ) );
+
                 // ^Remember to include console.logs() because callback will just output any old data and doesnt parse it.
                 extractWordpress(zip_name);
             });
@@ -194,13 +203,82 @@ function downloadWordpress(){
 
 }
 
-function createDatabase(){
+
+// Check if DB already exists
+function databaseExists(){
+
+    connection.query( 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "' + wp_db_name + '"', function(error,response){
+        
+        //connection.end();
+
+        if(error){
+            return true; // DB exists
+        }
+
+        //callback(null, console.log( chalk.green( 'DB Doesnt exist: ' + wp_db_name ) ) );
+
+
+    } );
 
 }
 
+
+// Create Db
+
+function createDatabase(){
+
+    if( !databaseExists(wp_db_name) ){
+
+        connection.query( 'CREATE DATABASE ' + wp_db_name , function(error, response){
+            
+            if(error){
+                callback ("create db error: " + error);
+                return;
+            }
+
+            callback( null, console.log( chalk.green( 'created DB: ' + wp_db_name ) ) );
+
+            connection.end();
+
+        });
+
+    }
+    
+}
+
+//callback(null, console.log( chalk.green( 'DB Doesnt exist: ' + wp_db_name ) ) );
+
+/*connection.on('error', function(error, response) {
+    if(error){
+        callback()
+    }
+});*/
+
+
+//createDatabase();
+
+
+// Install Wordpress
+
 function installWordpress(){
+    
     createDirectories(true);
+    
     downloadWordpress();
+    
+    connection.connect(function(error) {
+        if(error){
+            callback( "db error: " + error );
+            return;
+        }
+
+        createDatabase();
+
+        //callback( null, console.log( chalk.green( 'DB connection establised.' ) ) );
+    });
+    
+    
+
 }
 
 installWordpress();
