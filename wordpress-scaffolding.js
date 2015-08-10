@@ -30,7 +30,7 @@ var config = {
     user:       "root",
     pass:       "root",
     folder:     "project-folder",
-    url:        "http://localhost/" + wp_folder,
+    url:        function () { return "http://localhost/" + config.folder;},
     title:      "Project Title",
     email:      "me@example.com",
     db_host:    "localhost",
@@ -38,22 +38,6 @@ var config = {
     db_user:    "root",
     db_pass:    "root"
 };
-
-//var wp_version      = '4.2.4';
-/*var wp_custom_dir   = false;
-var wp_theme        = 'https://github.com/roikles/Flexbones/archive/master.zip';
-var wp_user         = 'root';
-var wp_pass         = 'root';
-var wp_folder       = 'project-folder';
-var wp_url          = 'http://localhost/' + wp_folder;
-var wp_title        = 'Project Title';
-var wp_email        = 'me@example.com';
-
-// Database details
-var wp_db_name      = 'demowpdb';
-var wp_db_host      = 'localhost';
-var wp_db_user      = 'root';
-var wp_db_pass      = 'root';*/
 
 var connection = mysql.createConnection({
     host     : config.db_host,
@@ -74,6 +58,43 @@ function callback (error, data) {
     }
     return data;
 }
+
+
+// create a directory synchronously
+function createDirectorySync(dir){
+        
+    try {
+
+        fs.mkdirSync(dir);
+
+    } catch(error) {
+        // If the error is not a file exists error
+        if ( error.code != 'EEXIST' ){
+            callback( 'Unable to create dir: ' + error );
+        }
+        // If file exists
+        callback('Directory already exists: ' + dir);
+        return;
+    }
+    
+    callback( null, console.log( chalk.green( 'Directory created: ' + dir ) ) );
+
+}
+
+
+function createWordpressDirectories(customDirStructure){
+
+    createDirectorySync('./wp-content');
+    createDirectorySync('./wp-content/themes');
+    createDirectorySync('./wp-content/plugins');
+    fs.writeFileSync('./wp-content/index.php', '<?php\r\n// Silence is golden.');
+
+    if(customDirStructure){
+        createDirectorySync('./wordpress');
+    }
+
+}
+
 
 
 /**
@@ -120,41 +141,42 @@ function getLatestWordpress (callback){
 
 }
 
-// create a directory synchronously
-function createDirectorySync(dir){
+
+// Download wordPress
+function downloadWordpress(){
+
+    // MERGE GET LATEST WORDPRESS WITH THIS TO AVOID ALL THIS CALLBACK SHENANIGANS!
+
+    getLatestWordpress( function ( err,result ) {
         
-    try {
+        console.log( chalk.yellow( 'Downloading ' + result.no_content_download ) ); 
 
-        fs.mkdirSync(dir);
+        var zip_name = 'wordpress.zip';
 
-    } catch(error) {
-        // If the error is not a file exists error
-        if ( error.code != 'EEXIST' ){
-            callback( 'Unable to create dir: ' + error );
-        }
-        // If file exists
-        callback('Directory already exists: ' + dir);
-        return;
-    }
-    
-    callback( null, console.log( chalk.green( 'Directory created: ' + dir ) ) );
+        var file = fs.createWriteStream(zip_name);
+        
+        var request = http.get(result.no_content_download, function(response) {
+            
+            response.pipe(file);
+            file.on('close', function() {
+                
+                file.close();  // close() is async, call cb after close completes.
 
-}
+                callback(null, console.log( chalk.green( 'Wordpress Downloaded successfully!') ) );
 
+                // ^Remember to include console.logs() because callback will just output any old data and doesnt parse it.
+                extractWordpress(zip_name);
 
-function createWordpressDirectories(customDirStructure){
-
-    createDirectorySync('./wp-content');
-    createDirectorySync('./wp-content/themes');
-    createDirectorySync('./wp-content/plugins');
-    fs.writeFileSync('./wp-content/index.php', '<?php\r\n// Silence is golden.');
-
-    if(customDirStructure){
-        createDirectorySync('./wordpress');
-    }
+            });
+        
+        }).on('error', function (error) {
+        
+            callback('Error with download of Wordpress: ', error.message);
+        
+        });
+    });
 
 }
-
 
 // Unzippy in a jiffy
 function extractWordpress(wp_zip){
@@ -185,41 +207,6 @@ function extractWordpress(wp_zip){
 
 }
 
-
-// Download wordPress
-
-function downloadWordpress(){
-
-    //console.log(chalk.green(result.no_content_download)); 
-
-    getLatestWordpress( function ( err,result ) {
-        
-        console.log( chalk.yellow( 'Downloading ' + result.no_content_download ) ); 
-
-        var zip_name = 'wordpress.zip';
-
-        var file = fs.createWriteStream(zip_name);
-        
-        var request = http.get(result.no_content_download, function(response) {
-            
-            response.pipe(file);
-            file.on('close', function() {
-                file.close();  // close() is async, call cb after close completes.
-
-                callback(null, console.log( chalk.green( 'Wordpress Downloaded successfully!') ) );
-
-                // ^Remember to include console.logs() because callback will just output any old data and doesnt parse it.
-                extractWordpress(zip_name);
-            });
-        
-        }).on('error', function (error) {
-        
-            callback('Error with download of Wordpress: ', error.message);
-        
-        });
-    });
-
-}
 
 
 // Check if DB already exists
@@ -264,31 +251,10 @@ function createDatabase(){
 
 
 // configureWordpress
-
-
-/*
-
-    "wp core config --dbname="+ wp_db_name +" --dbuser="+ wp_db_user +" --dbpass="+ wp_db_pass +" --dbhost="+ wp_db_host +" --extra-php='define(\"WP_DEBUG\",true);\ndefine(\"WP_CONTENT_DIR\", dirname(__FILE__). \"/wp-content\" );\ndefine(\"WP_CONTENT_URL\",\"http://\". $_SERVER[\"HTTP_HOST\"]. \"/"+ wp_folder +"/wp-content\");'",
-    
-    // Move wp-config to parent dir
-    
-    'mv wordpress/wp-config.php wp-config.php',
-    
-    // Create Database tables
-    
-    'wp core install --url='+ wp_url +' --title="'+ wp_title +'" --admin_user='+ wp_user +' --admin_password='+ wp_pass +' --admin_email='+ wp_email,
-    
-    // Add custom dir structure
-    
-    'wp option update home ' + wp_url,
-    'wp option update siteurl ' + wp_url + '/wordpress'
-*/
-
 function configureWordpress() {
 
     wp.discover( {path:'./'},function(wp){
         
-
         // extra php can be removed on no customDir install
         
         wp.core.config({
@@ -315,9 +281,9 @@ function configureWordpress() {
 // Install Wordpress
 function installWordpress(){
     
-    createWordpressDirectories(true)
+    q.fcall( createWordpressDirectories( true ) )
     .then( downloadWordpress() )
-    .then( connection.connect(function(error) {
+    .then( connection.connect( function(error) {
         if(error){
             callback( "db error: " + error );
             return;
@@ -327,9 +293,6 @@ function installWordpress(){
 
     }) )
     .then ( configureWordpress() );
-    
-    
-
 }
 
 installWordpress();
