@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 // use npm link to test this plugin while in dev
+var q = require('q');
 var fs = require('fs');
 var wp = require('wp-cli');
 var http = require('http');
@@ -224,7 +225,6 @@ function databaseExists(){
 
 
 // Create Db
-
 function createDatabase(){
 
     if( !databaseExists(wp_db_name) ){
@@ -246,27 +246,63 @@ function createDatabase(){
     
 }
 
-//callback(null, console.log( chalk.green( 'DB Doesnt exist: ' + wp_db_name ) ) );
 
-/*connection.on('error', function(error, response) {
-    if(error){
-        callback()
-    }
-});*/
+// configureWordpress
 
 
-//createDatabase();
+/*
+
+    "wp core config --dbname="+ wp_db_name +" --dbuser="+ wp_db_user +" --dbpass="+ wp_db_pass +" --dbhost="+ wp_db_host +" --extra-php='define(\"WP_DEBUG\",true);\ndefine(\"WP_CONTENT_DIR\", dirname(__FILE__). \"/wp-content\" );\ndefine(\"WP_CONTENT_URL\",\"http://\". $_SERVER[\"HTTP_HOST\"]. \"/"+ wp_folder +"/wp-content\");'",
+    
+    // Move wp-config to parent dir
+    
+    'mv wordpress/wp-config.php wp-config.php',
+    
+    // Create Database tables
+    
+    'wp core install --url='+ wp_url +' --title="'+ wp_title +'" --admin_user='+ wp_user +' --admin_password='+ wp_pass +' --admin_email='+ wp_email,
+    
+    // Add custom dir structure
+    
+    'wp option update home ' + wp_url,
+    'wp option update siteurl ' + wp_url + '/wordpress'
+*/
+
+function configureWordpress() {
+
+    wp.discover( {path:'./'},function(wp){
+        
+
+        // extra php can be removed on no customDir install
+        
+        wp.core.config({
+            dbname: wp_db_name,
+            dbuser: wp_db_user,
+            dbpass: wp_db_pass,
+            dbhost: wp_db_host,
+            extraphp:'define("WP_DEBUG",true);\ndefine("WP_CONTENT_DIR", dirname(__FILE__). "/wp-content" );\ndefine("WP_CONTENT_URL","http://" . $_SERVER["HTTP_HOST"]. "/"+ wp_folder +"/wp-content");'
+        },function(error, results){
+            
+            if(error){
+                callback(error);
+                return;
+            }
+
+            callback(results);
+        });
+    
+    });
+
+    
+}
 
 
 // Install Wordpress
-
 function installWordpress(){
     
-    createWordpressDirectories(true);
-    
-    /*downloadWordpress();
-    
-    connection.connect(function(error) {
+    createWordpressDirectories(true)
+    .then( downloadWordpress() )
+    .then( connection.connect(function(error) {
         if(error){
             callback( "db error: " + error );
             return;
@@ -274,22 +310,11 @@ function installWordpress(){
 
         createDatabase();
 
-        //callback( null, console.log( chalk.green( 'DB connection establised.' ) ) );
-    });*/
+    }) )
+    .then ( configureWordpress() );
     
     
 
 }
 
 installWordpress();
-
-/*prompt.multi([
-    {
-        label: 'Which version of Wordpress do you want to use',
-        key: 'version',
-        type: 'string',
-        validate: function (val) {
-            if (val.length !== 0){ var wp_version = val; }
-        }
-    }
-], console.log);*/
