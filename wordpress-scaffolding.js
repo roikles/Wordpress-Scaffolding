@@ -22,8 +22,25 @@ commander
 
 // Lets set up some default Vars
 
+//convert to object
+
+var config = {
+    custom_dir: true,
+    theme:      "https://github.com/roikles/Flexbones/archive/master.zip",
+    user:       "root",
+    pass:       "root",
+    folder:     "project-folder",
+    url:        "http://localhost/" + wp_folder,
+    title:      "Project Title",
+    email:      "me@example.com",
+    db_host:    "localhost",
+    db_name:    "demowpdb",
+    db_user:    "root",
+    db_pass:    "root"
+};
+
 //var wp_version      = '4.2.4';
-var wp_custom_dir   = false;
+/*var wp_custom_dir   = false;
 var wp_theme        = 'https://github.com/roikles/Flexbones/archive/master.zip';
 var wp_user         = 'root';
 var wp_pass         = 'root';
@@ -36,12 +53,12 @@ var wp_email        = 'me@example.com';
 var wp_db_name      = 'demowpdb';
 var wp_db_host      = 'localhost';
 var wp_db_user      = 'root';
-var wp_db_pass      = 'root';
+var wp_db_pass      = 'root';*/
 
 var connection = mysql.createConnection({
-    host     : wp_db_host,
-    user     : wp_db_user,
-    password : wp_db_pass
+    host     : config.db_host,
+    user     : config.db_user,
+    password : config.db_pass
 });
 
 
@@ -208,7 +225,7 @@ function downloadWordpress(){
 // Check if DB already exists
 function databaseExists(){
 
-    connection.query( 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "' + wp_db_name + '"', function(error,response){
+    connection.query( 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = "' + config.db_name + '"', function(error,response){
         
         //connection.end();
 
@@ -218,7 +235,6 @@ function databaseExists(){
 
         //callback(null, console.log( chalk.green( 'DB Doesnt exist: ' + wp_db_name ) ) );
 
-
     } );
 
 }
@@ -227,16 +243,16 @@ function databaseExists(){
 // Create Db
 function createDatabase(){
 
-    if( !databaseExists(wp_db_name) ){
+    if( !databaseExists(config.db_name) ){
 
-        connection.query( 'CREATE DATABASE ' + wp_db_name , function(error, response){
+        connection.query( 'CREATE DATABASE ' + config.db_name , function(error, response){
             
             if(error){
                 callback ("create db error: " + error);
                 return;
             }
 
-            callback( null, console.log( chalk.green( 'created DB: ' + wp_db_name ) ) );
+            callback( null, console.log( chalk.green( 'created DB: ' + config.db_name ) ) );
 
             connection.end();
 
@@ -276,10 +292,10 @@ function configureWordpress() {
         // extra php can be removed on no customDir install
         
         wp.core.config({
-            dbname: wp_db_name,
-            dbuser: wp_db_user,
-            dbpass: wp_db_pass,
-            dbhost: wp_db_host,
+            dbname: config.db_name,
+            dbuser: config.db_user,
+            dbpass: config.db_pass,
+            dbhost: config.db_host,
             extraphp:'define("WP_DEBUG",true);\ndefine("WP_CONTENT_DIR", dirname(__FILE__). "/wp-content" );\ndefine("WP_CONTENT_URL","http://" . $_SERVER["HTTP_HOST"]. "/"+ wp_folder +"/wp-content");'
         },function(error, results){
             
@@ -292,8 +308,7 @@ function configureWordpress() {
         });
     
     });
-
-    
+  
 }
 
 
